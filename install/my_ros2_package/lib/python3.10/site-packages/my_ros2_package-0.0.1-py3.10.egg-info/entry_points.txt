@@ -1,0 +1,12 @@
+[console_scripts]
+alarme = my_ros2_package.alarme:main
+chauffage = my_ros2_package.chauffage:main
+client = my_ros2_package.my_ros2_keyboard.client:main
+co2 = my_ros2_package.co2:main
+fenetre = my_ros2_package.fenetre:main
+humidite = my_ros2_package.humidite:main
+lumiere = my_ros2_package.lumiere:main
+serveur = my_ros2_package.my_ros2_keyboard.server:main
+stores = my_ros2_package.stores:main
+temperature = my_ros2_package.temperature:main
+

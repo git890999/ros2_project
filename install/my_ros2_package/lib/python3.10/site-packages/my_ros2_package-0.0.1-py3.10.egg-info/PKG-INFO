@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: my-ros2-package
+Version: 0.0.1
+Summary: Package ROS 2 contenant des publishers/subscribers et un service client/serveur
+Home-page: UNKNOWN
+Maintainer: issa2
+Maintainer-email: issa2@todo.todo
+License: Apache License 2.0
+Platform: UNKNOWN
+
+UNKNOWN
+

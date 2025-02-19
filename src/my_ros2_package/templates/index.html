@@ -1,0 +1,216 @@
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+from flask import Flask, render_template, jsonify
+import threading
+
+app = Flask(__name__)
+
+# Variables globales pour stocker les données des publishers
+temperature = None
+niveau_co2 = None
+lumiere = None
+humidite = None
+alerte_incendie = "Pas d'incendie"
+etat_fenetre = "Fermées"
+etat_chauffage = "Désactivé"
+
+# Subscriber pour la température
+class TemperatureSubscriber(Node):
+    def __init__(self):
+        super().__init__('temperature_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'temperature',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global temperature
+        try:
+            temperature = float(msg.data.split(':')[1].strip().split(' ')[0])
+        except (ValueError, IndexError) as e:
+            self.get_logger().error(f'Erreur lors de l\'analyse du message: {e}')
+
+
+# Subscriber pour le CO2
+class CO2Subscriber(Node):
+    def __init__(self):
+        super().__init__('co2_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'co2_level',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global niveau_co2
+        try:
+            niveau_co2 = float(msg.data.split(':')[1].strip().split(' ')[0])
+        except (ValueError, IndexError) as e:
+            self.get_logger().error(f'Erreur lors de l\'analyse du message: {e}')
+
+
+# Subscriber pour la lumière
+class LumiereSubscriber(Node):
+    def __init__(self):
+        super().__init__('lumiere_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'lumiere',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global lumiere
+        try:
+            lumiere = int(msg.data.split(':')[1].strip().split(' ')[0])
+        except (ValueError, IndexError) as e:
+            self.get_logger().error(f'Erreur lors de l\'analyse du message: {e}')
+
+
+# Subscriber pour l'humidité
+class HumiditySubscriber(Node):
+    def __init__(self):
+        super().__init__('humidity_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'humidity',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global humidite
+        try:
+            humidite = float(msg.data.split(':')[1].strip().split(' ')[0])
+        except (ValueError, IndexError) as e:
+            self.get_logger().error(f'Erreur lors de l\'analyse du message: {e}')
+
+
+# Subscriber pour l'alerte incendie
+class FireAlertSubscriber(Node):
+    def __init__(self):
+        super().__init__('fire_alert_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'fire_alert',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global alerte_incendie
+        alerte_incendie = msg.data
+
+
+# Subscriber pour l'état des fenêtres
+class FenetreSubscriber(Node):
+    def __init__(self):
+        super().__init__('fenetre_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'fenetre_state',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global etat_fenetre
+        etat_fenetre = msg.data
+
+
+# Subscriber pour l'état du chauffage
+class HeatingSubscriber(Node):
+    def __init__(self):
+        super().__init__('heating_subscriber')
+        self.subscription = self.create_subscription(
+            String,
+            'heating_state',
+            self.listener_callback,
+            10)
+        self.subscription
+
+    def listener_callback(self, msg):
+        global etat_chauffage
+        etat_chauffage = msg.data
+
+
+# Fonction pour démarrer les nodes ROS2 dans un thread séparé
+def start_ros_nodes():
+    rclpy.init()
+    temperature_subscriber = TemperatureSubscriber()
+    co2_subscriber = CO2Subscriber()
+    lumiere_subscriber = LumiereSubscriber()
+    humidity_subscriber = HumiditySubscriber()
+    fire_alert_subscriber = FireAlertSubscriber()
+    fenetre_subscriber = FenetreSubscriber()
+    heating_subscriber = HeatingSubscriber()
+    
+    rclpy.spin(temperature_subscriber)
+    rclpy.spin(co2_subscriber)
+    rclpy.spin(lumiere_subscriber)
+    rclpy.spin(humidity_subscriber)
+    rclpy.spin(fire_alert_subscriber)
+    rclpy.spin(fenetre_subscriber)
+    rclpy.spin(heating_subscriber)
+
+
+@app.route('/')
+def index():
+    return render_template('index.html',
+                           temperature=temperature,
+                           niveau_co2=niveau_co2,
+                           lumiere=lumiere,
+                           humidite=humidite,
+                           alerte_incendie=alerte_incendie,
+                           etat_fenetre=etat_fenetre,
+                           etat_chauffage=etat_chauffage)
+
+
+@app.route('/get_temperature')
+def get_temperature():
+    return jsonify({'temperature': temperature})
+
+
+@app.route('/get_co2')
+def get_co2():
+    return jsonify({'niveau_co2': niveau_co2})
+
+
+@app.route('/get_lumiere')
+def get_lumiere():
+    return jsonify({'lumiere': lumiere})
+
+
+@app.route('/get_humidity')
+def get_humidity():
+    return jsonify({'humidite': humidite})
+
+
+@app.route('/get_fire_alert')
+def get_fire_alert():
+    return jsonify({'alerte_incendie': alerte_incendie})
+
+
+@app.route('/get_windows')
+def get_windows():
+    return jsonify({'etat_fenetre': etat_fenetre})
+
+
+@app.route('/get_heating')
+def get_heating():
+    return jsonify({'etat_chauffage': etat_chauffage})
+
+
+if __name__ == '__main__':
+    # Démarrer les nodes ROS2 dans un thread séparé
+    ros_thread = threading.Thread(target=start_ros_nodes)
+    ros_thread.start()
+
+    # Démarrer le serveur Flask
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
