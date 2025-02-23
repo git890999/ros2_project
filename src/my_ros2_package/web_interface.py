@@ -117,7 +117,6 @@ class WebInterfaceNode(Node):
     def lumiere_callback(self, msg):
         global luminosite
         luminosite = msg.data
-        # Logique pour afficher la luminosité
         if luminosite:
             self.get_logger().info(f"Luminosité : {luminosite}")
 
@@ -137,7 +136,6 @@ class WebInterfaceNode(Node):
 
     def alarm_callback(self, msg):
         global alarm_state
-        # Gérer l'état de l'alarme en fonction de la température
         try:
             temperature = float(msg.data.split(':')[1].strip().split(' ')[0])
             if temperature > 30:
